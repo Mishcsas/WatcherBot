@@ -187,7 +187,7 @@ async def main():
             USER_ID = None
         TOKEN = file.get('TOKEN')
         PROXY = file.get('PROXY', 'socks5://74.119.147.209:4145')
-        TRIGGER = file.get('TRIGER')
+        TRIGGER = file.get('TRIGER', 0.5)
     session = AiohttpSession(proxy=PROXY)
     bot = Bot(token=TOKEN, session=session)
     await asyncio.gather(
