@@ -20,6 +20,7 @@ templates = list()
 bot = None
 dp = Dispatcher()
 w, h, max_loc = 1920, 1080, (0, 0) #Ширина Высота и лучшие координаты найденого шаблона
+TRIGER = 0.5
 keyboard = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text='/on')],
@@ -141,7 +142,8 @@ async def check(): #Проверка экрана на присутсвие ша
                 w, h = template.shape
                 result = cv2.matchTemplate(image=source, templ=template, method=cv2.TM_CCOEFF_NORMED)
                 _, max_val, _, max_loc = cv2.minMaxLoc(result)
-                if max_val > 0.6:
+                print(max_val)
+                if max_val >= TRIGER:
                     await bot.send_message(chat_id=USER_ID, text="Игра найдена", reply_markup=keyboard_agry)
                     await asyncio.sleep(10)
                     break
@@ -150,7 +152,7 @@ async def check(): #Проверка экрана на присутсвие ша
 
 
 async def main():
-    global USER_ID, bot, templates
+    global USER_ID, TRIGER, bot, templates
 
     for name in templates_list: #Добавляем все шаблоны в массив
         templates.append(cv2.imread(f'templates/{name}', cv2.IMREAD_GRAYSCALE))
@@ -163,6 +165,8 @@ async def main():
             USER_ID = None
         TOKEN = file.get('TOKEN')
         PROXY = file.get('PROXY', 'socks5://74.119.147.209:4145')
+        TRIGER = file.get('TRIGER')
+    print(TRIGER)
     session = AiohttpSession(proxy=PROXY)
     bot = Bot(token=TOKEN, session=session)
     await asyncio.gather(
