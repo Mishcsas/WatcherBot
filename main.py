@@ -20,7 +20,7 @@ templates = list()
 bot = None
 dp = Dispatcher()
 w, h, max_loc = 1920, 1080, (0, 0) #Ширина Высота и лучшие координаты найденого шаблона
-TRIGER = 0.5
+TRIGGER = 0.5
 keyboard = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text='/on')],
@@ -71,6 +71,8 @@ async def cmd_help(message: Message):
 /on - Включает поиск кнопки
 /off - Выключает поиск кнопки
 /status - Показывает статус поиска
+/set_trigger - Устанавливает тригер. 
+После команды дописать число от 0 до 1
 /stop - Выключает бота
     '''
     await send_message(text=text)
@@ -100,9 +102,30 @@ async def cmd_off(message : Message):
 async def cmd_status(message: Message):
     global USER_ID
     if (need_find):
-        await send_message("✅ Бот ищет кнопку",)
+        await send_message(f"✅ Бот ищет кнопку\nТригер: {TRIGGER}",)
     else:
-        await send_message("❌ Бот не ищет кнопку")
+        await send_message(f"❌ Бот не ищет кнопку\nТригер: {TRIGGER}")
+
+
+@dp.message(Command('set_trigger')) #Обработчик set_triger
+async def cmd_set_triger(message: Message):
+    global TRIGGER
+    if message.text == None:
+        return
+    args = message.text.split()
+    if len(args) > 1:
+        try:
+            TRIGGER = float(args[1])
+            with open('needs.json', 'r') as file_json:
+                file = json.load(file_json)
+            file['TRIGER'] = TRIGGER
+            with open('needs.json', 'w') as file_json:
+                json.dump(file, file_json, indent=2)
+            await send_message("✅ Тригер установлен",)
+        except Exception as e:
+            await send_message("❌ Неправильный синтаксис",)
+    else:
+        await send_message("❌ Неправильный синтаксис")
 
 
 @dp.message(Command('stop')) #Обработчик stop
@@ -142,8 +165,7 @@ async def check(): #Проверка экрана на присутсвие ша
                 w, h = template.shape
                 result = cv2.matchTemplate(image=source, templ=template, method=cv2.TM_CCOEFF_NORMED)
                 _, max_val, _, max_loc = cv2.minMaxLoc(result)
-                print(max_val)
-                if max_val >= TRIGER:
+                if max_val >= TRIGGER:
                     await bot.send_message(chat_id=USER_ID, text="Игра найдена", reply_markup=keyboard_agry)
                     await asyncio.sleep(10)
                     break
@@ -152,7 +174,7 @@ async def check(): #Проверка экрана на присутсвие ша
 
 
 async def main():
-    global USER_ID, TRIGER, bot, templates
+    global USER_ID, TRIGGER, bot, templates
 
     for name in templates_list: #Добавляем все шаблоны в массив
         templates.append(cv2.imread(f'templates/{name}', cv2.IMREAD_GRAYSCALE))
@@ -165,7 +187,7 @@ async def main():
             USER_ID = None
         TOKEN = file.get('TOKEN')
         PROXY = file.get('PROXY', 'socks5://74.119.147.209:4145')
-        TRIGER = file.get('TRIGER')
+        TRIGGER = file.get('TRIGER')
     session = AiohttpSession(proxy=PROXY)
     bot = Bot(token=TOKEN, session=session)
     await asyncio.gather(
