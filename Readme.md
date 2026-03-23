@@ -9,8 +9,8 @@
 ## 1. Клонирование репозитория и установка окружения
 
 ```bash
-git clone <url-репозитория>
-cd <название-папки>
+git clone https://github.com/Mishcsas/WatcherBot
+cd WatcherBot
 python -m venv venv
 ```
 
